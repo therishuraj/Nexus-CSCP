@@ -214,7 +214,7 @@ services:
     ports:
       - "3008:3008"
     volumes:
-      - ./logging-stack/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     networks:
       - app-network
 
