@@ -1,0 +1,580 @@
+# =============================================================================
+# ORDER SERVICE API SPECIFICATION
+# =============================================================================
+# Business Context: Nexus Collaborative Supply Chain Platform
+# Service: Order Management Microservice
+# Version: 1.0.0
+# Last Updated: November 2024
+# 
+# STAKEHOLDER INFORMATION:
+# - Business Owner: Supply Chain Operations Department
+# - Technical Contact: Backend Engineering Team (backend-support@nexus.com)
+# - Primary Stakeholders: Order Management Team, Supplier Relations Team, Finance Team
+# - Secondary Stakeholders: Integration Team, Performance Engineering Team
+# - Security Stakeholders: Security Operations Team, Payment Processing Team
+# - Infrastructure Stakeholders: DevOps Team, Infrastructure Team
+# =============================================================================
+
+openapi: 3.0.1
+
+# =============================================================================
+# SERVICE INFORMATION
+# =============================================================================
+info:
+  title: "Order Service API"
+  description: |
+    Order management microservice for Nexus collaborative supply chain platform.
+
+    This service provides comprehensive order management capabilities including:
+    - Order placement and processing with product availability validation
+    - Order status management and tracking
+    - CQRS-based architecture with separate command and query operations
+    - Real-time order notifications via Apache Kafka
+    - Integration with Product, User, Investment, and Payment services
+    - Order view materialization for optimized queries
+
+    **Technical Stack:** Spring Boot 3.5.7, MongoDB (CQRS with dual collections), Apache Kafka, Java 17
+    **Architecture Pattern:** Command Query Responsibility Segregation (CQRS)
+    **Business Owner:** Supply Chain Operations Department
+    **Technical Contact:** Backend Engineering Team
+  contact:
+    name: "Backend Engineering Team"
+    email: "backend-support@nexus.com"
+  version: "1.0.0"
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+# Stakeholder: Infrastructure Team
+# Purpose: Service endpoint configuration for different environments
+servers:
+  - url: "http://localhost:8082"
+    description: "Local development server"
+  - url: "http://order-service:8082"
+    description: "Docker container server"
+
+# =============================================================================
+# API TAGS & ORGANIZATION
+# =============================================================================
+# Stakeholder: API Design Team, Documentation Team
+# Purpose: Logical grouping of endpoints for better organization
+tags:
+  - name: "Order Commands"
+    description: "Write operations for order creation and status updates (CQRS Command Side). Business Stakeholder: Order Management Team, Technical Owner: Backend Engineering Team"
+  - name: "Order Queries"
+    description: "Read operations for order retrieval and search (CQRS Query Side). Business Stakeholder: Order Management Team, Technical Owner: Backend Engineering Team"
+
+# =============================================================================
+# API ENDPOINTS
+# =============================================================================
+paths:
+  
+  # ---------------------------------------------------------------------------
+  # ORDER COMMAND ENDPOINTS (CQRS Write Side)
+  # ---------------------------------------------------------------------------
+  # Business Context: Order creation and status management operations
+  # Primary Stakeholders: Order Management Team, Supplier Relations Team
+  
+  # PLACE ORDER
+  # Stakeholder: Order Management Team, Finance Team
+  # Use Case: Order placement, product reservation, payment processing
+  /api/v1/orders:
+    post:
+      tags:
+        - "Order Commands"
+      summary: "Place New Order"
+      description: |
+        Creates a new order in the system with the following workflow:
+        1. Validates product availability and quantity
+        2. Retrieves user and funding request details
+        3. Deducts funder's wallet balance
+        4. Updates product quantity
+        5. Creates order record in MongoDB (orders collection)
+        6. Publishes order notification event to Kafka topic
+        7. Creates materialized view in order_views collection
+        
+        Business Stakeholder: Order Management Team, Finance Team
+        Technical Owner: Backend Engineering Team
+        Use Case: Order placement with multi-service coordination
+        
+        **Performance Considerations:**
+        - Product availability is validated before wallet deduction
+        - Uses WebClient for async microservice communication
+        - Kafka event publishing for downstream systems
+        
+        **Error Scenarios:**
+        - Product not found or insufficient quantity
+        - User not found or insufficient wallet balance
+        - Payment processing failure
+        - Service communication timeout
+      operationId: "placeOrder"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaceOrderRequest"
+        required: true
+      responses:
+        "200":
+          description: "Order placed successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "400":
+          description: "Invalid input data, insufficient quantity, or insufficient wallet balance"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Product, User, or Funding Request not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error during order processing"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # UPDATE ORDER STATUS
+  # Stakeholder: Order Management Team, Supplier Relations Team
+  # Use Case: Order lifecycle management, fulfillment tracking
+  /api/v1/orders/{id}/status:
+    put:
+      tags:
+        - "Order Commands"
+      summary: "Update Order Status"
+      description: |
+        Updates the status of an existing order with the following workflow:
+        1. Validates order exists
+        2. Updates order status in orders collection
+        3. Publishes status change event to Kafka
+        4. Updates materialized view in order_views collection
+        
+        **Valid Status Values:**
+        - PLACED: Initial order placement
+        - CONFIRMED: Order confirmed by supplier
+        - PROCESSING: Order is being processed
+        - SHIPPED: Order has been shipped
+        - DELIVERED: Order delivered to customer
+        - CANCELLED: Order cancelled
+        
+        Business Stakeholder: Order Management Team, Supplier Relations Team
+        Technical Owner: Backend Engineering Team
+        Use Case: Order status tracking and lifecycle management
+      operationId: "updateOrderStatus"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Unique order identifier"
+          required: true
+          schema:
+            type: "string"
+            example: "507f1f77bcf86cd799439011"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatusRequest"
+        required: true
+      responses:
+        "200":
+          description: "Order status updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+        "400":
+          description: "Invalid status value or order ID format"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Order not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error during status update"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------------------------------------------------------------------------
+  # ORDER QUERY ENDPOINTS (CQRS Read Side)
+  # ---------------------------------------------------------------------------
+  # Business Context: Order retrieval and search operations
+  # Primary Stakeholders: Order Management Team, Customer Support Team
+  
+  # GET ORDERS BY USER
+  # Stakeholder: Order Management Team, Customer Support Team
+  # Use Case: User order history, customer support inquiries
+  /api/v1/orders:
+    get:
+      tags:
+        - "Order Queries"
+      summary: "Get Orders by User ID"
+      description: |
+        Retrieves all orders for a specific user from the materialized order_views collection.
+        
+        **Query Optimization:**
+        - Uses MongoDB index on userId for fast retrieval
+        - Returns denormalized data with product and user names
+        - Includes payment status and order totals
+        
+        Business Stakeholder: Order Management Team, Customer Support Team
+        Technical Owner: Backend Engineering Team
+        Use Case: User order history and tracking
+      operationId: "getOrdersByUser"
+      parameters:
+        - name: "userId"
+          in: "query"
+          description: "User ID to filter orders"
+          required: true
+          schema:
+            type: "string"
+            example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "Orders retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/OrderView"
+        "400":
+          description: "Invalid user ID format"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error during query"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # GET ORDER BY ID
+  # Stakeholder: Order Management Team, Customer Support Team
+  # Use Case: Order detail viewing, customer inquiries, tracking
+  /api/v1/orders/{id}:
+    get:
+      tags:
+        - "Order Queries"
+      summary: "Get Order by ID"
+      description: |
+        Retrieves detailed order information by order ID from the materialized order_views collection.
+        
+        **Data Included:**
+        - Order ID and status
+        - Product details (name, quantity, total amount)
+        - Funder and supplier information
+        - Payment status (supplier paid flag)
+        
+        Business Stakeholder: Order Management Team, Customer Support Team
+        Technical Owner: Backend Engineering Team
+        Use Case: Order detail viewing and customer support
+      operationId: "getOrderById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Unique order identifier"
+          required: true
+          schema:
+            type: "string"
+            example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "Order retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderView"
+        "400":
+          description: "Invalid order ID format"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Order not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Internal server error during query"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+# =============================================================================
+# DATA MODELS & SCHEMAS
+# =============================================================================
+# Business Context: Data structures for API request/response handling
+# Primary Stakeholders: Backend Engineering Team, API Design Team
+components:
+  schemas:
+    
+    # ---------------------------------------------------------------------------
+    # COMMAND DTOs (Write Operations)
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Order Management Team, Finance Team
+    # Use Case: Order creation and status management
+    
+    PlaceOrderRequest:
+      type: "object"
+      description: "Request DTO for placing a new order with product, user, and funding details"
+      required:
+        - productId
+        - quantity
+        - funderId
+        - supplierId
+        - requestId
+      properties:
+        productId:
+          type: "string"
+          description: "Unique identifier of the product to order"
+          example: "507f1f77bcf86cd799439011"
+        quantity:
+          type: "integer"
+          format: "int32"
+          description: "Quantity of product to order (must be positive)"
+          minimum: 1
+          example: 10
+        funderId:
+          type: "string"
+          description: "User ID of the funder who will pay for the order"
+          example: "507f1f77bcf86cd799439012"
+        supplierId:
+          type: "string"
+          description: "User ID of the supplier fulfilling the order"
+          example: "507f1f77bcf86cd799439013"
+        requestId:
+          type: "string"
+          description: "Funding request ID associated with this order"
+          example: "507f1f77bcf86cd799439014"
+    
+    StatusRequest:
+      type: "object"
+      description: "Request DTO for updating order status"
+      required:
+        - status
+      properties:
+        status:
+          type: "string"
+          description: "New status for the order"
+          enum:
+            - PLACED
+            - CONFIRMED
+            - PROCESSING
+            - SHIPPED
+            - DELIVERED
+            - CANCELLED
+          example: "CONFIRMED"
+    
+    OrderResponse:
+      type: "object"
+      description: "Response DTO returned after placing an order"
+      properties:
+        id:
+          type: "string"
+          description: "Unique order identifier (MongoDB ObjectId)"
+          example: "507f1f77bcf86cd799439011"
+        status:
+          type: "string"
+          description: "Current order status"
+          example: "PLACED"
+    
+    StatusResponse:
+      type: "object"
+      description: "Response DTO returned after updating order status"
+      properties:
+        status:
+          type: "string"
+          description: "Updated order status"
+          example: "CONFIRMED"
+    
+    # ---------------------------------------------------------------------------
+    # QUERY DTOs (Read Operations)
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Order Management Team, Customer Support Team
+    # Use Case: Order retrieval and display
+    
+    OrderView:
+      type: "object"
+      description: "Materialized view of order data optimized for queries (denormalized)"
+      properties:
+        orderId:
+          type: "string"
+          description: "Unique order identifier"
+          example: "507f1f77bcf86cd799439011"
+        productName:
+          type: "string"
+          description: "Name of the ordered product (denormalized)"
+          example: "Industrial Grade Steel Beam"
+        quantity:
+          type: "integer"
+          format: "int32"
+          description: "Quantity ordered"
+          example: 10
+        totalAmount:
+          type: "number"
+          format: "double"
+          description: "Total order amount (price × quantity)"
+          example: 15000.50
+        funderName:
+          type: "string"
+          description: "Name of the funder (denormalized)"
+          example: "ABC Investment Corp"
+        supplierName:
+          type: "string"
+          description: "Name of the supplier (denormalized)"
+          example: "XYZ Manufacturing Ltd"
+        status:
+          type: "string"
+          description: "Current order status"
+          enum:
+            - PLACED
+            - CONFIRMED
+            - PROCESSING
+            - SHIPPED
+            - DELIVERED
+            - CANCELLED
+          example: "CONFIRMED"
+        supplierPaid:
+          type: "boolean"
+          description: "Indicates whether the supplier has been paid"
+          example: false
+    
+    # ---------------------------------------------------------------------------
+    # ERROR RESPONSE
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Backend Engineering Team, Integration Team
+    # Use Case: Standardized error handling and debugging
+    
+    ErrorResponse:
+      type: "object"
+      description: "Standard error response structure for all error scenarios"
+      properties:
+        timestamp:
+          type: "string"
+          format: "date-time"
+          description: "Error occurrence timestamp"
+          example: "2024-11-21T10:30:45.123Z"
+        status:
+          type: "integer"
+          format: "int32"
+          description: "HTTP status code"
+          example: 400
+        error:
+          type: "string"
+          description: "HTTP error reason phrase"
+          example: "Bad Request"
+        message:
+          type: "string"
+          description: "Detailed error message"
+          example: "Insufficient product quantity available"
+        path:
+          type: "string"
+          description: "Request path that caused the error"
+          example: "/api/v1/orders"
+
+# =============================================================================
+# ARCHITECTURE & INTEGRATION NOTES
+# =============================================================================
+# 
+# CQRS ARCHITECTURE:
+# ------------------
+# This service implements Command Query Responsibility Segregation (CQRS) pattern:
+# 
+# Command Side (Write Operations):
+# - Endpoint: POST /api/v1/orders, PUT /api/v1/orders/{id}/status
+# - Collection: orders (MongoDB)
+# - Purpose: Handle state-changing operations
+# - Publishes events to Kafka topic: orderNotification
+# 
+# Query Side (Read Operations):
+# - Endpoint: GET /api/v1/orders, GET /api/v1/orders/{id}
+# - Collection: order_views (MongoDB)
+# - Purpose: Optimized read operations with denormalized data
+# - Materialized from order events and external service data
+# 
+# MICROSERVICE INTEGRATIONS:
+# --------------------------
+# 1. Product Service (WebClient)
+#    - Endpoint: http://product-service:8083/api/v1/products/{id}
+#    - Purpose: Product availability validation, quantity updates
+# 
+# 2. User Service (WebClient)
+#    - Endpoint: http://user-service:3000/api/v1/users/batch
+#    - Purpose: Batch user details retrieval (funder, supplier)
+# 
+# 3. Investment Service (WebClient)
+#    - Endpoint: http://investment-service:8081/api/v1/funding-requests/{id}
+#    - Purpose: Funding request validation and details
+# 
+# 4. Payment Service (WebClient)
+#    - Endpoint: http://payment-service:8084/api/v1/payments/pay
+#    - Purpose: Payment processing and wallet deduction
+# 
+# EVENT STREAMING:
+# ----------------
+# Kafka Topic: orderNotification
+# Events Published:
+# - Order placed: {orderId, status: "PLACED", productId, userId, amount}
+# - Status updated: {orderId, status: "CONFIRMED|PROCESSING|SHIPPED|DELIVERED|CANCELLED"}
+# 
+# Consumers:
+# - Notification Service: Sends order confirmation emails
+# - Analytics Service: Order processing metrics
+# - Warehouse Service: Order fulfillment automation
+# 
+# DATA CONSISTENCY:
+# -----------------
+# - Eventually consistent between orders and order_views collections
+# - Optimistic locking for concurrent status updates
+# - Retry mechanism for Kafka event publishing
+# - Circuit breaker pattern for external service calls
+# 
+# SECURITY CONSIDERATIONS:
+# ------------------------
+# - API Gateway handles authentication/authorization
+# - Internal service-to-service communication uses service discovery
+# - Sensitive data (wallet balances) not exposed in query endpoints
+# - Payment operations validated against user permissions
+# 
+# PERFORMANCE OPTIMIZATIONS:
+# --------------------------
+# - MongoDB indexes on userId, orderId, productId
+# - WebClient async communication (non-blocking I/O)
+# - Batch user retrieval reduces network overhead
+# - Materialized views eliminate join operations
+# - Kafka async event publishing prevents blocking
+# 
+# =============================================================================
+# END OF API SPECIFICATION
+# =============================================================================
+# This comprehensive API specification includes:
+# ✅ Complete endpoint documentation with stakeholder information
+# ✅ Detailed request/response schemas with examples
+# ✅ Business context and use cases for each endpoint
+# ✅ Stakeholder mapping for accountability and ownership
+# ✅ CQRS architecture explanation and implementation details
+# ✅ Microservice integration documentation
+# ✅ Event streaming (Kafka) configuration
+# ✅ Security and performance considerations
+# ✅ Error handling and response structures
+# 
+# For questions or updates, contact: backend-support@nexus.com
+# =============================================================================

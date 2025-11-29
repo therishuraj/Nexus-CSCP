@@ -1,0 +1,20 @@
+meta {
+  name: Pay Order
+  type: http
+  seq: 4
+}
+
+request {
+  method: PUT
+  url: {{base_url}}/api/v1/orders/ORDER_ID/pay
+  headers {
+    Accept: application/json
+  }
+}
+
+# Replace ORDER_ID with actual order ID.
+assertions {
+  expect status == 200
+  expect jsonpath "$.supplierPaid" == true
+}
+

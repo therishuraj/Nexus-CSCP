@@ -1,0 +1,30 @@
+meta {
+  name: Place Order
+  type: http
+  seq: 1
+}
+
+request {
+  method: POST
+  url: {{base_url}}/api/v1/orders
+  headers {
+    Content-Type: application/json
+    Accept: application/json
+  }
+}
+
+body:json {
+  {
+    "productId": "prod-ABC123",
+    "quantity": 10,
+    "funderId": "funder_001",
+    "supplierId": "supplier_009",
+    "requestId": "fundreq_12345"
+  }
+}
+
+assertions {
+  expect status == 200
+  expect jsonpath "$.status" == "PLACED"
+}
+

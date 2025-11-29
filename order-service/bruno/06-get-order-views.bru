@@ -1,0 +1,21 @@
+meta {
+  name: Get Order Views
+  type: http
+  seq: 6
+}
+
+request {
+  method: GET
+  url: {{base_url}}/api/v1/orders/views
+  params {
+    userId: {{user_id}}
+  }
+  headers {
+    Accept: application/json
+  }
+}
+
+assertions {
+  expect status == 200
+}
+

@@ -1,0 +1,31 @@
+meta {
+  name: Update Order Status
+  type: http
+  seq: 2
+}
+
+put {
+  url: http://localhost:3007/api/v1/orders/6921398d7d876ba22f782e26/status
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+      "status": "DELIVERED"
+    }
+}
+
+assert {
+  expect status: eq 200
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
