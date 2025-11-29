@@ -1,0 +1,256 @@
+openapi: 3.0.3
+info:
+  title: "Investment Service API"
+  description: |
+    Funding request management microservice for Nexus collaborative supply chain platform.
+    Provides lifecycle operations for funding requests including creation, investment,
+    update, retrieval, and return distribution.
+
+    Business Capabilities:
+      - Funding request creation and definition (amount, deadline, committed returns)
+      - Investor participation and tracking (per-investor invested amounts)
+      - Automatic funder capital credit on full funding
+      - Return distribution workflow (principal + pro‑rata committed returns)
+
+    Technical Stack: Spring Boot 3.5.7, MongoDB, Java 17, WebClient
+    Business Owner: Product Engineering Department
+    Technical Contact: Backend Engineering Team
+  contact:
+    name: "Backend Engineering Team"
+    email: "backend-support@nexus.com"
+  version: "1.0.0"
+
+servers:
+  - url: "http://localhost:3004"
+    description: "Local development server"
+
+  - url: "https://investment-service.dev.nexus.com"
+    description: "Dev environment"
+
+  - url: "https://investment-service.prod.nexus.com"
+    description: "Production environment"
+
+tags:
+  - name: "Funding Requests"
+    description: "Operations for funding requests lifecycle. Stakeholders: Product Management (business), Backend Engineering (technical), Finance Operations (returns)."
+
+paths:
+  /api/v1/funding-requests:
+    post:
+      tags: ["Funding Requests"]
+      summary: "Create Funding Request"
+      description: |
+        Creates a new funding request owned by the authenticated funder.
+        Stakeholders:
+          - Business: Product Management
+          - Technical: Backend Engineering Team
+          - Finance: Finance Operations (committedReturnAmount accuracy)
+        Use Case: Define a new capital raising initiative.
+      operationId: createFundingRequest
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          description: Funder user ID creating the request.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundingRequestCreationDTO'
+      responses:
+        '201':
+          description: Funding request created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequest'
+        '400': { description: Validation error }
+        '401': { description: Unauthorized funder }
+    get:
+      tags: ["Funding Requests"]
+      summary: "List Funding Requests"
+      description: |
+        Retrieves all funding requests.
+        Stakeholders:
+          - Business: Analytics & Reporting
+          - Technical: Backend Engineering
+          - Support: Customer Support Team
+        Use Case: Portfolio overview & monitoring.
+      operationId: listFundingRequests
+      responses:
+        '200':
+          description: List retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FundingRequest'
+  /api/v1/funding-requests/{requestId}:
+    get:
+      tags: ["Funding Requests"]
+      summary: "Get Funding Request"
+      description: |
+        Retrieves a funding request by ID.
+        Stakeholders:
+          - Business: Product Management
+          - Technical: Backend Engineering
+          - Support: Customer Support Team
+        Use Case: Detailed view for monitoring or support.
+      operationId: getFundingRequest
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Request retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequest'
+        '404': { description: Not found }
+    put:
+      tags: ["Funding Requests"]
+      summary: "Update Funding Request"
+      description: |
+        Updates editable fields of an OPEN funding request (title, description, deadline, committedReturnAmount).
+        Stakeholders:
+          - Business: Product Management
+          - Technical: Backend Engineering
+          - Compliance: Audit (change history)
+        Use Case: Adjust funding parameters before full funding.
+      operationId: updateFundingRequest
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-User-Id
+          in: header
+          required: true
+          description: Funder ID (must own the request)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundingRequestUpdateDTO'
+      responses:
+        '200': { description: Updated successfully }
+        '400': { description: Validation or status not OPEN }
+        '403': { description: Ownership violation }
+        '404': { description: Not found }
+  /api/v1/funding-requests/{requestId}/investment:
+    post:
+      tags: ["Funding Requests"]
+      summary: "Invest In Funding Request"
+      description: |
+        Records an investment by an investor (negative walletAdjustment deducted remotely via User Service).
+        Automatically credits funder when request becomes fully funded.
+        Stakeholders:
+          - Business: Product Management
+          - Finance: Finance Operations
+          - Technical: Backend Engineering
+        Use Case: Capital contribution.
+      operationId: investInFundingRequest
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-User-Id
+          in: header
+          required: true
+          description: Investor user ID executing the investment
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundingInvestmentDTO'
+      responses:
+        '200': { description: Investment recorded }
+        '400': { description: Validation failure (amount too large or insufficient funds) }
+        '404': { description: Funding request not found }
+  /api/v1/funding-requests/{requestId}/distribute-returns:
+    post:
+      tags: ["Funding Requests"]
+      summary: "Distribute Returns"
+      description: |
+        Distributes principal + pro‑rata committed returns to investors; debits funder first.
+        Stakeholders:
+          - Finance: Finance Operations
+          - Business: Product Management
+          - Technical: Backend Engineering
+        Use Case: Settlement workflow.
+      operationId: distributeReturns
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200': { description: Returns distributed }
+        '400': { description: Invalid state or already distributed }
+        '404': { description: Funding request not found }
+
+components:
+  schemas:
+    FundingRequestCreationDTO:
+      type: object
+      required: [title, requiredAmount, deadline, committedReturnAmount, description]
+      properties:
+        title: { type: string, description: "Funding request title" }
+        requiredAmount: { type: number, format: double, minimum: 100, description: "Total capital required" }
+        deadline: { type: string, format: date-time, description: "Future deadline for funding" }
+        committedReturnAmount: { type: number, format: double, minimum: 0, description: "Total gross return promised" }
+        description: { type: string, description: "Detailed business purpose" }
+    FundingRequestUpdateDTO:
+      type: object
+      properties:
+        title: { type: string }
+        deadline: { type: string, format: date-time }
+        committedReturnAmount: { type: number, format: double, minimum: 0 }
+        description: { type: string }
+    FundingInvestmentDTO:
+      type: object
+      required: [walletAdjustment]
+      properties:
+        walletAdjustment: { type: number, format: double, description: "Negative amount deducted from investor wallet" }
+    FundingRequest:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        requiredAmount: { type: number, format: double }
+        currentFunded: { type: number, format: double }
+        funderId: { type: string }
+        status: { type: string, description: "OPEN|FUNDED|..." }
+        createdAt: { type: string, format: date-time }
+        deadline: { type: string, format: date-time }
+        investorAmounts:
+          type: object
+          additionalProperties:
+            type: number
+        committedReturnAmount: { type: number, format: double }
+        description: { type: string }
+        returnDistributed: { type: boolean }
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-User-Id
