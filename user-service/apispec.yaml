@@ -1,0 +1,558 @@
+# =============================================================================
+# USER SERVICE API SPECIFICATION
+# =============================================================================
+# Business Context: Nexus Collaborative Supply Chain Platform
+# Service: User Management Microservice
+# Version: 1.0.0
+# Last Updated: November 2024
+# 
+# STAKEHOLDER INFORMATION:
+# - Business Owner: Product Engineering Department
+# - Technical Contact: Backend Engineering Team (backend-support@nexus.com)
+# - Primary Stakeholders: Customer Operations Team, Customer Support Team
+# - Secondary Stakeholders: Integration Team, Performance Engineering Team
+# - Security Stakeholders: Security Operations Team, Authentication Team
+# - Infrastructure Stakeholders: DevOps Team, Infrastructure Team
+# =============================================================================
+
+openapi: 3.0.1
+
+# =============================================================================
+# SERVICE INFORMATION
+# =============================================================================
+info:
+  title: "User Service API"
+  description: |
+    User management microservice for Nexus collaborative supply chain platform.
+
+    This service provides comprehensive user management capabilities including:
+    - User account creation and management
+    - User authentication and validation  
+    - Batch user operations for performance optimization
+    - User data retrieval and updates
+
+    **Technical Stack:** Spring Boot 3.5.7, MongoDB, Java 21
+    **Business Owner:** Product Engineering Department
+    **Technical Contact:** Backend Engineering Team
+  contact:
+    name: "Backend Engineering Team"
+    email: "backend-support@nexus.com"
+  version: "1.0.0"
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+# Stakeholder: Infrastructure Team
+# Purpose: Service endpoint configuration for different environments
+servers:
+  - url: "http://localhost:3000"
+    description: "Generated server url"
+
+# =============================================================================
+# API TAGS & ORGANIZATION
+# =============================================================================
+# Stakeholder: API Design Team, Documentation Team
+# Purpose: Logical grouping of endpoints for better organization
+tags:
+  - name: "User Management"
+    description: "User account management operations including creation, retrieval, updates, validation, and batch operations. Business Stakeholder: Customer Operations Team, Technical Owner: Backend Engineering Team"
+
+# =============================================================================
+# API ENDPOINTS
+# =============================================================================
+paths:
+  
+  # ---------------------------------------------------------------------------
+  # USER MANAGEMENT BY ID ENDPOINTS
+  # ---------------------------------------------------------------------------
+  # Business Context: Individual user operations for customer support and profile management
+  # Primary Stakeholders: Customer Support Team, Customer Operations Team
+  /api/v1/users/{id}:
+    
+    # GET USER BY ID
+    # Stakeholder: Customer Support Team, User Management Team
+    # Use Case: Profile viewing, customer support inquiries
+    get:
+      tags:
+        - "User Management"
+      summary: "Get User by ID"
+      description: "Retrieves detailed user information by user ID including wallet balance and funding requests. Business Stakeholder: Customer Support Team, Technical Owner: User Management Team, Use Case: Profile viewing and customer support"
+      operationId: "getUserById"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "User retrieved successfully"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "400":
+          description: "Invalid user ID format"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "404":
+          description: "User not found"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+    
+    # UPDATE USER
+    # Stakeholder: Customer Operations Team, User Management Team
+    # Use Case: Profile updates, wallet management, funding request updates
+    put:
+      tags:
+        - "User Management"
+      summary: "Update User Information"
+      description: "Updates user profile information, wallet balance, and funding requests. Supports wallet adjustments and funding request management. Business Stakeholder: Customer Operations Team, Technical Owner: User Management Team, Use Case: Profile updates and wallet management"
+      operationId: "updateUser"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: "User updated successfully"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "400":
+          description: "Invalid input data or insufficient funds"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "404":
+          description: "User not found"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+    
+    # DELETE USER
+    # Stakeholder: Data Management Team, User Management Team
+    # Use Case: Account closure, data cleanup, GDPR compliance
+    delete:
+      tags:
+        - "User Management"
+      summary: "Delete User Account"
+      description: "Permanently deletes a user account from the system. This action cannot be undone. Business Stakeholder: Data Management Team, Technical Owner: User Management Team, Use Case: Account closure and data cleanup"
+      operationId: "deleteUser"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "User deleted successfully"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "400":
+          description: "Invalid user ID format"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "404":
+          description: "User not found"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "500":
+          description: "Failed to delete user"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+
+  # ---------------------------------------------------------------------------
+  # WALLET MANAGEMENT ENDPOINTS
+  # ---------------------------------------------------------------------------
+  # Business Context: Financial operations and wallet management
+  # Primary Stakeholders: Finance Team, Customer Operations Team
+  
+  # WALLET WITHDRAW
+  # Stakeholder: Finance Team, Security Operations Team
+  # Use Case: Money withdrawal, financial transactions
+  /api/v1/wallet/withdraw:
+    post:
+      tags:
+        - "wallet-controller"
+      operationId: "withdrawMoney"
+      parameters:
+        - name: "X-User-Id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletWithdrawRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                type: "object"
+                additionalProperties:
+                  type: "object"
+
+  # WALLET DEPOSIT
+  # Stakeholder: Finance Team, Customer Operations Team
+  # Use Case: Money deposit, account funding
+  /api/v1/wallet/deposit:
+    post:
+      tags:
+        - "wallet-controller"
+      operationId: "depositMoney"
+      parameters:
+        - name: "X-User-Id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletDepositRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                type: "object"
+                additionalProperties:
+                  type: "object"
+
+  # ---------------------------------------------------------------------------
+  # BATCH OPERATIONS ENDPOINT
+  # ---------------------------------------------------------------------------
+  # Business Context: Performance optimization for microservice communication
+  # Primary Stakeholders: Integration Team, Performance Engineering Team
+  /api/v1/users/batch:
+    post:
+      tags:
+        - "User Management"
+      summary: "Batch User Lookup"
+      description: "Retrieves multiple users by their IDs in a single optimized request. Returns user ID, email, and roles for found users, null values for not found users. Business Stakeholder: Integration Team, Technical Owner: Performance Engineering Team, Use Case: Bulk user data retrieval for microservice communication"
+      operationId: "getUsersBatch"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserBatchRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: "Batch lookup completed successfully"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "400":
+          description: "Invalid input or user ID format"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "500":
+          description: "Internal server error"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+
+  # ---------------------------------------------------------------------------
+  # USER CREATION ENDPOINT
+  # ---------------------------------------------------------------------------
+  # Business Context: New user onboarding and registration
+  # Primary Stakeholders: Customer Onboarding Team, User Management Team
+  /api/v1/user:
+    post:
+      tags:
+        - "User Management"
+      summary: "Create New User Account"
+      description: "Creates a new user account with email, password, roles, and optional wallet balance. Business Stakeholder: Customer Onboarding Team, Technical Owner: User Management Team, Use Case: User registration and account setup"
+      operationId: "createUser"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateRequestDTO"
+        required: true
+      responses:
+        "201":
+          description: "User created successfully"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "400":
+          description: "Invalid input data or validation error"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+
+  # ---------------------------------------------------------------------------
+  # AUTHENTICATION ENDPOINT
+  # ---------------------------------------------------------------------------
+  # Business Context: User authentication and session management
+  # Primary Stakeholders: Security Operations Team, Authentication Team
+  /api/v1/auth/user/validate:
+    post:
+      tags:
+        - "User Management"
+      summary: "Validate User Credentials"
+      description: "Validates user login credentials for authentication. Business Stakeholder: Security Operations Team, Technical Owner: Authentication Team, Use Case: User login and session management"
+      operationId: "validateUser"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserValidationRequestDTO"
+        required: true
+      responses:
+        "200":
+          description: "User credentials validated successfully"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "400":
+          description: "Invalid input format"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "401":
+          description: "Invalid credentials"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+
+  # ---------------------------------------------------------------------------
+  # BULK USER RETRIEVAL ENDPOINT
+  # ---------------------------------------------------------------------------
+  # Business Context: Administrative operations and user management
+  # Primary Stakeholders: Customer Operations Team, User Management Team
+  /api/v1/users:
+    get:
+      tags:
+        - "User Management"
+      summary: "Retrieve All Users"
+      description: "Retrieves a list of all users in the system with basic information. Business Stakeholder: Customer Operations Team, Technical Owner: User Management Team, Use Case: Admin dashboard and user management"
+      operationId: "getAllUsers"
+      responses:
+        "200":
+          description: "Users retrieved successfully"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+        "500":
+          description: "Internal server error"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+
+  # ---------------------------------------------------------------------------
+  # HEALTH CHECK ENDPOINT
+  # ---------------------------------------------------------------------------
+  # Business Context: Service monitoring and infrastructure management
+  # Primary Stakeholders: DevOps Team, Infrastructure Team
+  /api/v1/health:
+    get:
+      tags:
+        - "User Management"
+      summary: "Health Check"
+      description: "Service health status endpoint for monitoring and load balancer health checks. Business Stakeholder: DevOps Team, Technical Owner: Infrastructure Team, Use Case: Service monitoring and availability checks"
+      operationId: "healthCheck"
+      responses:
+        "200":
+          description: "Service is healthy"
+          content:
+            "*/*":
+              schema:
+                type: "string"
+
+# =============================================================================
+# DATA MODELS & SCHEMAS
+# =============================================================================
+# Business Context: Data structures for API request/response handling
+# Primary Stakeholders: Backend Engineering Team, API Design Team
+components:
+  schemas:
+    
+    # ---------------------------------------------------------------------------
+    # USER UPDATE REQUEST DTO
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Customer Operations Team, User Management Team
+    # Use Case: Profile updates, wallet adjustments, funding management
+    UserUpdateRequestDTO:
+      type: "object"
+      description: "Request DTO for updating user information including profile data, wallet balance, and funding requests"
+      properties:
+        name:
+          type: "string"
+          description: "User's full name"
+          example: "John Doe"
+        email:
+          type: "string"
+          description: "User's email address"
+          example: "john.doe@example.com"
+        walletBalance:
+          type: "number"
+          description: "New wallet balance (absolute value)"
+          example: 1000.50
+        walletAdjustment:
+          type: "number"
+          description: "Wallet balance adjustment (positive for credit, negative for debit)"
+          example: -50.25
+        fundingRequestIds:
+          type: "array"
+          description: "List of funding request IDs associated with the user"
+          items:
+            type: "string"
+            example: "507f1f77bcf86cd799439011"
+
+    # ---------------------------------------------------------------------------
+    # WALLET TRANSACTION DTOs
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Finance Team, Security Operations Team
+    # Use Case: Financial transactions and wallet operations
+    
+    WalletWithdrawRequestDTO:
+      type: "object"
+      description: "Request DTO for wallet withdrawal operations"
+      properties:
+        amount:
+          type: "number"
+          description: "Amount to withdraw from wallet"
+          example: 100.00
+
+    WalletDepositRequestDTO:
+      type: "object"
+      description: "Request DTO for wallet deposit operations"
+      properties:
+        amount:
+          type: "number"
+          description: "Amount to deposit to wallet"
+          example: 200.00
+
+    # ---------------------------------------------------------------------------
+    # BATCH USER REQUEST DTO
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Integration Team, Performance Engineering Team
+    # Use Case: Bulk user data retrieval for microservice communication
+    UserBatchRequestDTO:
+      required:
+        - "userIds"
+      type: "object"
+      description: "Request DTO for batch user lookup operations"
+      properties:
+        userIds:
+          type: "array"
+          description: "List of user IDs to retrieve in batch"
+          example:
+            - "507f1f77bcf86cd799439011"
+            - "507f1f77bcf86cd799439012"
+          items:
+            type: "string"
+            description: "Individual user ID for batch lookup"
+            example: "507f1f77bcf86cd799439011"
+
+    # ---------------------------------------------------------------------------
+    # USER CREATION REQUEST DTO
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Customer Onboarding Team, User Management Team
+    # Use Case: New user registration and account setup
+    UserCreateRequestDTO:
+      type: "object"
+      description: "Request DTO for creating new user accounts"
+      properties:
+        name:
+          type: "string"
+          description: "User's full name"
+          example: "Jane Smith"
+        email:
+          type: "string"
+          description: "User's email address (must be unique)"
+          example: "jane.smith@example.com"
+        password:
+          type: "string"
+          description: "User's password (will be hashed before storage)"
+          example: "SecurePassword123!"
+        roles:
+          type: "array"
+          description: "List of user roles for authorization"
+          items:
+            type: "string"
+            example: "USER"
+        walletBalance:
+          type: "number"
+          description: "Initial wallet balance (optional, defaults to 0)"
+          example: 0.00
+
+    # ---------------------------------------------------------------------------
+    # USER VALIDATION REQUEST DTO
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Security Operations Team, Authentication Team
+    # Use Case: User authentication and login validation
+    UserValidationRequestDTO:
+      type: "object"
+      description: "Request DTO for user credential validation during authentication"
+      properties:
+        email:
+          type: "string"
+          description: "User's email address for login"
+          example: "user@example.com"
+        password:
+          type: "string"
+          description: "User's password for validation"
+          example: "UserPassword123!"
+
+# =============================================================================
+# END OF API SPECIFICATION
+# =============================================================================
+# This comprehensive API specification includes:
+# ✅ Complete endpoint documentation with stakeholder information
+# ✅ Detailed request/response schemas with examples
+# ✅ Business context and use cases for each endpoint
+# ✅ Stakeholder mapping for accountability and ownership
+# ✅ Technical implementation details and constraints
+# ✅ Security considerations and authentication requirements
+# ✅ Performance optimization notes for batch operations
+# 
+# For questions or updates, contact: backend-support@nexus.com
+# =============================================================================

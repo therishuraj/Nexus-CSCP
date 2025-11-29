@@ -1,0 +1,28 @@
+meta {
+  name: Update User
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{baseUrl}}/api/v1/users/691f2d4a000f8b25e8cb3e33
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "john.updated@example.com",
+    "name": "John Doe Updated",
+    "walletBalance": 750.50
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

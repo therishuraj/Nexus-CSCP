@@ -1,0 +1,48 @@
+meta {
+  name: Create User
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000/api/v1/user
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Ataa",
+    "email": "Ataa@gmail.com",
+    "password": "ataakhan",
+    "roles": ["FUNDER"],
+    "walletBalance": 0
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.success: eq true
+  res.body.message: eq "User created successfully"
+  res.body.data.name: eq "New Test User"
+  res.body.data.email: eq "test.user@example.com"
+  res.body.data.walletBalance: eq 1000.00
+}
+
+docs {
+  # Create User with New Role Structure
+  
+  This test creates a user with the new role system:
+  - **SUPPLIER**: Can manage products and inventory
+  - **FUNDER**: Can create funding requests and place orders
+  - **INVESTOR**: Can invest in requests and view profit share
+  - **ADMIN**: System administration
+  
+  ## Expected Response
+  The API should return a 201 Created status with the user data including:
+  - User ID, name, email
+  - Assigned roles array
+  - Default verified status (false)
+  - Wallet balance as provided
+  - Creation and update timestamps
+}

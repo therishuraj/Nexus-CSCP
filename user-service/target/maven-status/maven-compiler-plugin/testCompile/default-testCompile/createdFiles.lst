@@ -1,0 +1,8 @@
+com/nexus/user_service/controller/UserControllerTest.class
+com/nexus/user_service/service/UserServiceImplTest.class
+com/nexus/user_service/utils/LoggerUtilsTest.class
+com/nexus/user_service/utils/PasswordUtilsTest.class
+com/nexus/user_service/utils/MapperUtilsTest.class
+com/nexus/user_service/UserServiceApplicationTests.class
+com/nexus/user_service/utils/ValidationUtilsTest.class
+com/nexus/user_service/utils/ResponseUtilsTest.class

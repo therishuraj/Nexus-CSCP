@@ -1,0 +1,58 @@
+meta {
+  name: Wallet Withdraw
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/v1/wallet/withdraw
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-User-Id: 6911c5dd9ca3972553ceaed9
+}
+
+body:json {
+  {
+    "amount": 200.00
+  }
+}
+
+docs {
+  # Wallet Withdraw API
+  
+  This endpoint allows withdrawing money from a user's wallet via payment service integration.
+  
+  ## Headers Required:
+  - **X-User-Id**: The ID of the user whose wallet will be debited
+  
+  ## Request Body:
+  - **amount**: Amount to withdraw from wallet (must be > 0)
+  
+  ## UPI ID Generation:
+  The system automatically generates a UPI ID based on the user's name:
+  - User name "John Doe Jr." becomes "johndoejr@upi"
+  - Special characters and spaces are removed, converted to lowercase
+  
+  ## Expected Response:
+  Returns the response from payment service directly:
+  ```json
+  {
+    "payoutId": "691f72fcf447a3b914563efe",
+    "externalUserId": "6911c5dd9ca3972553ceaed9",
+    "amount": 200.0,
+    "upiId": "johndoe@upi", 
+    "status": "SUCCESS",
+    "message": "Payout processed successfully (demo mode)."
+  }
+  ```
+  
+  ## Error Cases:
+  - 400 Bad Request: Missing X-User-Id header
+  - 400 Bad Request: Invalid amount (null or <= 0)
+  - 400 Bad Request: User not found
+  - 400 Bad Request: Payment service failure
+}
