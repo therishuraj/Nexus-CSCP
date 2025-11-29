@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: nexus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+      - name: notification-service
+        image: notification-service:latest
+        imagePullPolicy: Never
+        env:
+        - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: SPRING_KAFKA_CONSUMER_GROUP_ID
+          value: "nexus-notification-group"
+        - name: SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET
+          value: "earliest"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "125m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: nexus
+spec:
+  ports:
+  - port: 8081
+    targetPort: 8081
+  selector:
+    app: notification-service

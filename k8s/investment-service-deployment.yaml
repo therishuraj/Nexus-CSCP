@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: investment-service
+  namespace: nexus
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: investment-service
+  template:
+    metadata:
+      labels:
+        app: investment-service
+    spec:
+      containers:
+      - name: investment-service
+        image: investment-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3004
+        env:
+        - name: SPRING_DATA_MONGODB_URI
+          value: "mongodb+srv://nexus:nexus5@cluster0.kei0rsa.mongodb.net/nexus_investments?retryWrites=true&w=majority&appName=Cluster0"
+        - name: USER_SERVICE_URL
+          value: "http://user-service:3000/api/v1/users"
+        - name: SERVER_PORT
+          value: "3004"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: investment-service
+  namespace: nexus
+spec:
+  ports:
+  - port: 3004
+    targetPort: 3004
+  selector:
+    app: investment-service
