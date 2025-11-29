@@ -1,0 +1,28 @@
+meta {
+  name: Get Orders By User
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:3007/api/v1/orders?userId=691f5e70e60b753bc42c5462
+  body: none
+  auth: inherit
+}
+
+params:query {
+  userId: 691f5e70e60b753bc42c5462
+}
+
+headers {
+  Accept: application/json
+}
+
+assert {
+  expect status: eq 200
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Get Order By ID
+  type: http
+  seq: 2
+}
+
+request {
+  method: GET
+  url: {{base_url}}/api/v1/orders/ORDER_ID
+  headers {
+    Accept: application/json
+  }
+}
+
+# Replace ORDER_ID with the id from 01-place-order response.
+assertions {
+  expect status == 200
+  expect jsonpath "$.status" != null
+}
+

@@ -1,0 +1,21 @@
+meta {
+  name: Get Orders By User
+  type: http
+  seq: 5
+}
+
+request {
+  method: GET
+  url: {{base_url}}/api/v1/orders
+  params {
+    userId: {{user_id}}
+  }
+  headers {
+    Accept: application/json
+  }
+}
+
+assertions {
+  expect status == 200
+}
+
