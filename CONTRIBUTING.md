@@ -34,7 +34,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/therishuraj/Nexus.git
+   git remote add upstream https://github.com/therishuraj/Nexus-CSCP.git
    ```
 4. **Create a feature branch**:
    ```bash
@@ -108,7 +108,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Contribution Workflow
 
-1. Check existing [issues](https://github.com/therishuraj/Nexus/issues) or create a new one
+1. Check existing [issues](https://github.com/therishuraj/Nexus-CSCP/issues) or create a new one
 2. Fork and create a branch (see [Branch Naming](#branch-naming-convention))
 3. Make your changes following [Coding Standards](#coding-standards)
 4. Write/update tests
@@ -519,9 +519,14 @@ If you're contributing a new service, include:
 
 ## Questions?
 
-- **GitHub Discussions**: For general questions
+- **GitHub Discussions**: For general questions and community support
 - **Issues**: For bug reports and feature requests
-- **Email**: rishurajsalarpur@gmail.com
+- **Maintainers**:
+  - Rishu Raj - rishurajsalarpur@gmail.com
+  - Tushar Trivedi - tushar.trivedi@gmail.com
+  - Mdataa Khan - trendsandfactss@gmail.com
+  - Dheeraj Salunkhe - 2024sl93042@wilp.bits-pilani.ac.in
+  - Sagar Dev - sagar.dev.lab@gmail.com
 
 ---
 
