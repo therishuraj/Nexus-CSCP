@@ -1,0 +1,236 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2182:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - app-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "events:1:1,orderNotification:1:1"
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - app-network
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "3000:3000"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb+srv://nexus:nexus5@cluster0.kei0rsa.mongodb.net/nexus_users?appName=Cluster0
+      SERVER_PORT: 3000
+    networks:
+      - app-network
+
+  product-service:
+    build: ./product-service
+    container_name: product-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb+srv://nexus:nexus5@cluster0.kei0rsa.mongodb.net/nexus_products?retryWrites=true&w=majority&appName=Cluster0
+      SERVER_PORT: 3002
+    networks:
+      - app-network
+
+  producer:
+    build: ./producer
+    container_name: producer
+    ports:
+      - "3003:3003"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: 3003
+    networks:
+      - app-network
+
+  investment-service:
+    build: ./investment-service
+    container_name: investment-service
+    ports:
+      - "3004:3004"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb+srv://nexus:nexus5@cluster0.kei0rsa.mongodb.net/funding_requests?retryWrites=true&w=majority&appName=Cluster0
+      SERVER_PORT: 3004
+      USER_SERVICE_URL: http://user-service:3000
+    networks:
+      - app-network
+
+  consumer:
+    build: ./consumer
+    container_name: consumer
+    ports:
+      - "3005:3005"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: 3005
+    networks:
+      - app-network
+
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    ports:
+      - "3006:3006"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb+srv://nexus:nexus5@cluster0.kei0rsa.mongodb.net/nexus_products?retryWrites=true&w=majority&appName=Cluster0
+      SERVER_PORT: 3006
+      USER_SERVICE_URL: http://user-service:3000
+    networks:
+      - app-network
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    ports:
+      - "3007:3007"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      investment-service:
+        condition: service_started
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb+srv://nexus:nexus5@cluster0.kei0rsa.mongodb.net/order-ms?retryWrites=true&w=majority&appName=Cluster0
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: 3007
+      PRODUCT_SERVICE_URL: http://product-service:3002
+      USER_SERVICE_URL: http://user-service:3000
+      INVESTMENT_SERVICE_URL: http://investment-service:3004
+      ADMIN_USER_ID: 691f333917c065b20466799d
+    networks:
+      - app-network
+
+  api-gateway:
+    build: ./API-Gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      investment-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      producer:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8080
+      USER_SERVICE_URL: http://user-service:3000
+      PRODUCT_SERVICE_URL: http://product-service:3002
+      PRODUCER_SERVICE_URL: http://producer:3003
+      INVESTMENT_SERVICE_URL: http://investment-service:3004
+      PAYMENT_SERVICE_URL: http://payment-service:3006
+      ORDER_SERVICE_URL: http://order-service:3007
+    networks:
+      - app-network
+
+      # ELK Stack - Logging Infrastructure
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.0
+    container_name: logstash
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "3008:3008"
+    volumes:
+      - ./logging-stack/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - app-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: kibana
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
