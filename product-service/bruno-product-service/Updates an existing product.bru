@@ -1,0 +1,25 @@
+meta {
+  name: Updates an existing product
+  type: http
+  seq: 8
+}
+
+get {
+  url: /api/v1/product/{id}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Laptop Pro",
+    "category": "Electronics",
+    "quantity": 40,
+    "price": 1299.99,
+    "supplierId": "supplier123",
+    "tags": ["technology", "gadgets", "pro"],
+    "isShortage": false,
+    "shortageThreshold": 5,
+    "listedAt": "2025-11-18T10:00:00"
+  }
+}
