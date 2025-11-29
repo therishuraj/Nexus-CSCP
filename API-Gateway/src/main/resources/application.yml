@@ -1,0 +1,74 @@
+# --- Server Configuration ---
+server:
+  port: 8080
+
+# --- JWT Configuration ---
+jwt:
+  algorithm: HS256
+  # The secret remains Base64 encoded for security and compatibility
+  secret: dGhpcy1pcy1hLXZlcnktbG9uZy1zZWNyZXQta2V5LWV4YW1wbGUtMTIzNDU2Nzg5MA==
+  expiration: 3600000
+
+# --- Spring Web Configuration ---
+spring:
+  main:
+    web-application-type: reactive
+
+  # --- Spring Cloud Gateway Configuration ---
+  cloud:
+    gateway:
+      default-filters:
+        - JwtAuthFilter
+
+      routes:
+
+        - id: user-service
+          uri: http://user-service:3000
+          predicates:
+            - Path=/nexus/api/v1/user, /nexus/api/v1/users/**, /nexus/api/v1/wallet/**
+            - Path=/nexus/api/v1/user, /nexus/api/v1/users/**, /nexus/api/v1/wallet/**
+          filters:
+            - StripPrefix=1
+            - UserAuthorizationFilter
+            - name: CircuitBreaker
+              args:
+                name: userServiceCB
+                fallbackUri: forward:/fallback/users
+
+        - id: product-service
+          uri: http://product-service:3002
+          predicates:
+            - Path=/nexus/api/v1/product/**, /nexus/api/v1/products/**
+          filters:
+            - StripPrefix=1
+            - ProductAuthorizationFilter
+            - name: CircuitBreaker
+              args:
+                name: productServiceCB
+                fallbackUri: forward:/fallback/products
+
+
+        - id: investment-service
+          uri: http://investment-service:3004
+          predicates:
+            - Path=/nexus/api/v1/funding-requests/**
+          filters:
+            - StripPrefix=1
+            - FundingRequestAuthorizationFilter
+            - name: CircuitBreaker
+              args:
+                name: investmentServiceCB
+                fallbackUri: forward:/fallback/funding-requests
+
+        - id: order-service
+          uri: http://order-service:3007
+          predicates:
+               - Path=/nexus/api/v1/orders/**
+          filters:
+               - StripPrefix=1
+               - OrderAuthorizationFilter
+               - name: CircuitBreaker
+                 args:
+                   name: orderServiceCB
+                   fallbackUri: forward:/fallback/orders
+                              

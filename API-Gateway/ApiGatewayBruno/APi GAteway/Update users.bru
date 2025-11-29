@@ -1,0 +1,21 @@
+meta {
+  name: Update users
+  type: http
+  seq: 3
+}
+
+put {
+  url: http://localhost:8080/nexus/api/v1/users/691ddcc93b406ba016e11e9c
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzM4NCJ9.eyJyb2xlcyI6WyJTVVBQTElFUiIsIkZVTkRFUiJdLCJpZCI6IjY5MWVlN2NjOWY2ZmVlMzQ2MjhhNGM1NyIsInN1YiI6Im1kYXR0YS5qb2huc29uQG5leHVzLmNvbSIsImlhdCI6MTc2MzYzNTE3MSwiZXhwIjoxNzYzNjM4NzcxfQ.nYaoYhV5f0YHGI3a41amLsnWitXa46C7K0TN7VvCy_oFwasG-hyprhTppefXU6zJ
+}
+
+body:json {
+  {
+    "walletBalance": 2520.00
+  }
+}

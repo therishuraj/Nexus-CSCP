@@ -1,0 +1,15 @@
+meta {
+  name: Get all Users
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:8080/nexus/api/v1/users
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzM4NCJ9.eyJyb2xlcyI6WyJTVVBQTElFUiIsIkZVTkRFUiJdLCJpZCI6IjY5MWVlN2NjOWY2ZmVlMzQ2MjhhNGM1NyIsInN1YiI6Im1kYXR0YS5qb2huc29uQG5leHVzLmNvbSIsImlhdCI6MTc2MzY1ODM2NCwiZXhwIjoxNzYzNjYxOTY0fQ.85ZtwEVUm6LdiyU-3qPso-Jd6l1Bc8NobWqMtaPchM5L9AsKbRSgT7bNKx-BbilJ
+}

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "APi GAteway",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

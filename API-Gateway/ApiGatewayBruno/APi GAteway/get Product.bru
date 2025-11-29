@@ -1,0 +1,15 @@
+meta {
+  name: get Product
+  type: http
+  seq: 7
+}
+
+get {
+  url: http://localhost:8080/nexus/api/v1/products
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzM4NCJ9.eyJyb2xlcyI6WyJTVVBQTElFUiIsIkZVTkRFUiJdLCJpZCI6IjY5MWVlN2NjOWY2ZmVlMzQ2MjhhNGM1NyIsInN1YiI6Im1kYXR0YS5qb2huc29uQG5leHVzLmNvbSIsImlhdCI6MTc2MzY1MDMwNSwiZXhwIjoxNzYzNjUzOTA1fQ.nqvzq-gpwK4Z-TXnNsAwoSOmii2ayT179hvuck2zp9hg81Yek0ZXvIhUUbcaRAHH
+}

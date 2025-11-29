@@ -1,0 +1,15 @@
+meta {
+  name: get all Funding Request
+  type: http
+  seq: 8
+}
+
+get {
+  url: http://localhost:8080/nexus/api/v1/funding-request/all
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzM4NCJ9.eyJyb2xlcyI6WyJTVVBQTElFUiIsIkZVTkRFUiJdLCJpZCI6IjY5MWVlN2NjOWY2ZmVlMzQ2MjhhNGM1NyIsInN1YiI6Im1kYXR0YS5qb2huc29uQG5leHVzLmNvbSIsImlhdCI6MTc2MzY1MjU0NCwiZXhwIjoxNzYzNjU2MTQ0fQ.deTFP8CczTuYXb_PwIO72z6FpLYemcuJ_bg8nNmL_hNMA13b_TUTbi1ZNVNSXr6P
+}

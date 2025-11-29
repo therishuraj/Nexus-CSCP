@@ -1,0 +1,28 @@
+meta {
+  name: Create product
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/nexus/api/v1/product
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzM4NCJ9.eyJyb2xlcyI6WyJJTlZFU1RPUiIsIkZVTkRFUiJdLCJpZCI6IjY5MWY0YjUyOWY2ZmVlMzQ2MjhhNGM1OCIsInN1YiI6Im1kYXR0YS5qb2huc29uMkBuZXh1cy5jb20iLCJpYXQiOjE3NjM2NTg2MTAsImV4cCI6MTc2MzY2MjIxMH0.OmQmAHHbxQKY1d5pI0CHLkIO_dr7ChvNScOvy4gIzDwJALvhKM_4qHVBDQca3zGz
+}
+
+body:json {
+  {
+    "name": "newMan",
+    "category": "Sld",
+    "quantity": 100,
+    "price": 2.00,
+    "tags": ["Human"],
+    "isShortage": false,
+    "shortageThreshold": 10,
+    "listedAt": "2025-11-18T10:00:00"
+  }
+}
