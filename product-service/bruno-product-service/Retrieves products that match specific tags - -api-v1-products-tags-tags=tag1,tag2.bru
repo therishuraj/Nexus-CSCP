@@ -1,0 +1,15 @@
+meta {
+  name: Retrieves products that match specific tags - /api/v1/products/tags?tags=tag1,tag2
+  type: http
+  seq: 10
+}
+
+get {
+  url: /api/v1/products/tags?tags=technology,gadgets
+  body: none
+  auth: inherit
+}
+
+params:query {
+  tags: technology,gadgets
+}

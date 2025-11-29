@@ -1,0 +1,154 @@
+openapi: 3.0.3
+info:
+  title: Product Service API
+  description: API documentation for the Product Service, which allows managing products in the system.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3002
+    description: Local server
+
+paths:
+  # API to fetch a product by its ID
+  /api/v1/products/{id}:
+    get:
+      summary: Fetch a product by ID
+      description: Retrieve the details of a product using its unique identifier.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the product to fetch.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product fetched successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product not found.
+
+    # API to update a product's details
+    put:
+      summary: Update a product
+      description: Update the details of an existing product, such as its name, category, quantity, or price.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the product to update.
+          schema:
+            type: string
+        - name: X-User-Id
+          in: header
+          required: true
+          description: The supplier ID of the user making the request.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '200':
+          description: Product updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product updated successfully.
+        '404':
+          description: Product not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product not found.
+
+    # API to delete a product by its ID
+    delete:
+      summary: Delete a product
+      description: Remove a product from the system using its unique identifier.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the product to delete.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product deleted successfully.
+        '404':
+          description: Product not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product not found.
+
+components:
+  schemas:
+    # Schema for the Product object
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the product.
+          example: prod123
+        name:
+          type: string
+          description: The name of the product.
+          example: Smartphone
+        category:
+          type: string
+          description: The category of the product.
+          example: Electronics
+        quantity:
+          type: integer
+          description: The quantity of the product in stock.
+          example: 50
+        price:
+          type: number
+          format: double
+          description: The price of the product.
+          example: 499.99
+        supplierId:
+          type: string
+          description: The supplier ID associated with the product.
+          example: supplier123
+        listedAt:
+          type: string
+          format: date-time
+          description: The date and time when the product was listed.
+          example: 2025-11-21T10:00:00Z

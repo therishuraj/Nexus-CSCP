@@ -1,0 +1,25 @@
+meta {
+  name: Create a new product
+  type: http
+  seq: 1
+}
+
+post {
+  url: api/v1/product
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Laptop",
+    "category": "Electronics",
+    "quantity": 50,
+    "price": 999.99,
+    "supplierId": "supplier123",
+    "tags": ["technology", "gadgets"],
+    "isShortage": false,
+    "shortageThreshold": 10,
+    "listedAt": "2025-11-18T10:00:00"
+  }
+}
