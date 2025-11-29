@@ -5,8 +5,9 @@ server:
 # --- JWT Configuration ---
 jwt:
   algorithm: HS256
-  # The secret remains Base64 encoded for security and compatibility
-  secret: dGhpcy1pcy1hLXZlcnktbG9uZy1zZWNyZXQta2V5LWV4YW1wbGUtMTIzNDU2Nzg5MA==
+  # Replace with your Base64 encoded JWT secret key
+  # Generate using: echo -n "your-secret-key" | base64
+  secret: <your-jwt-secret-base64-encoded>
   expiration: 3600000
 
 # --- Spring Web Configuration ---
@@ -47,7 +48,6 @@ spring:
                 name: productServiceCB
                 fallbackUri: forward:/fallback/products
 
-
         - id: investment-service
           uri: http://investment-service:3004
           predicates:
@@ -71,4 +71,3 @@ spring:
                  args:
                    name: orderServiceCB
                    fallbackUri: forward:/fallback/orders
-                              
