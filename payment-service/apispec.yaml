@@ -1,0 +1,326 @@
+# =============================================================================
+# PAYMENT SERVICE API SPECIFICATION
+# =============================================================================
+# Business Context: Nexus Collaborative Supply Chain Platform
+# Service: Payment Management Microservice
+# Version: 1.0.0
+# Last Updated: November 2024
+# 
+# STAKEHOLDER INFORMATION:
+# - Business Owner: Finance Operations Department
+# - Technical Contact: Payment Engineering Team (payment-support@nexus.com)
+# - Primary Stakeholders: Finance Team, Customer Operations Team
+# - Secondary Stakeholders: Integration Team, Risk Management Team
+# - Security Stakeholders: Security Operations Team, Financial Compliance Team
+# - Infrastructure Stakeholders: DevOps Team, Infrastructure Team
+# =============================================================================
+
+openapi: 3.0.1
+
+# =============================================================================
+# SERVICE INFORMATION
+# =============================================================================
+info:
+  title: "Payment Service API"
+  description: |
+    Payment management microservice for Nexus collaborative supply chain platform.
+
+    This service provides comprehensive payment processing capabilities including:
+    - Deposit operations for adding funds to user accounts
+    - Payout operations for withdrawing funds from user accounts
+    - Integration with Razorpay payment gateway
+    - Secure financial transaction processing
+
+    **Technical Stack:** Spring Boot 3.5.7, MongoDB, Java 21, Razorpay SDK
+    **Business Owner:** Finance Operations Department
+    **Technical Contact:** Payment Engineering Team
+  contact:
+    name: "Payment Engineering Team"
+    email: "payment-support@nexus.com"
+  version: "1.0.0"
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
+# Stakeholder: Infrastructure Team
+# Purpose: Service endpoint configuration for different environments
+servers:
+  - url: "http://localhost:8082"
+    description: "Local development server"
+
+# =============================================================================
+# API TAGS & ORGANIZATION
+# =============================================================================
+# Stakeholder: API Design Team, Documentation Team
+# Purpose: Logical grouping of endpoints for better organization
+tags:
+  - name: "Payment Operations"
+    description: "Financial transaction operations including deposits and withdrawals. Business Stakeholder: Finance Team, Technical Owner: Payment Engineering Team"
+
+# =============================================================================
+# API ENDPOINTS
+# =============================================================================
+paths:
+  
+  # ---------------------------------------------------------------------------
+  # PAYMENT DEPOSIT ENDPOINT
+  # ---------------------------------------------------------------------------
+  # Business Context: User fund deposits through payment gateway
+  # Primary Stakeholders: Finance Team, Customer Operations Team
+  /api/v1/deposit:
+    
+    # CREATE PAYMENT DEPOSIT
+    # Stakeholder: Finance Team, Customer Operations Team
+    # Use Case: Adding funds to user wallet through secure payment processing
+    post:
+      tags:
+        - "Payment Operations"
+      summary: "Create Payment Deposit"
+      description: "Processes a deposit request to add funds to a user's wallet through Razorpay payment gateway. Validates user existence and processes payment securely. Business Stakeholder: Finance Team, Technical Owner: Payment Engineering Team, Use Case: User wallet funding and account top-up"
+      operationId: "createPayment"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentRequest"
+        required: true
+      responses:
+        "200":
+          description: "Payment deposit processed successfully"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/CreatePaymentResponse"
+        "400":
+          description: "Invalid payment request or validation error"
+          content:
+            "*/*":
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "Invalid payment amount or user ID"
+        "404":
+          description: "User not found"
+          content:
+            "*/*":
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "User with provided ID does not exist"
+        "500":
+          description: "Payment processing failed"
+          content:
+            "*/*":
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "Payment gateway error or internal processing failure"
+
+  # ---------------------------------------------------------------------------
+  # PAYOUT WITHDRAWAL ENDPOINT
+  # ---------------------------------------------------------------------------
+  # Business Context: User fund withdrawals to external accounts
+  # Primary Stakeholders: Finance Team, Risk Management Team
+  /api/v1/withdraw:
+    
+    # CREATE PAYOUT WITHDRAWAL
+    # Stakeholder: Finance Team, Risk Management Team
+    # Use Case: Withdrawing funds from user wallet to external UPI account
+    post:
+      tags:
+        - "Payment Operations"
+      summary: "Create Payout Withdrawal"
+      description: "Processes a withdrawal request to transfer funds from user's wallet to external UPI account through Razorpay payout system. Validates user balance and UPI details before processing. Business Stakeholder: Finance Team, Technical Owner: Payment Engineering Team, Use Case: User fund withdrawal and account payout"
+      operationId: "createPayout"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePayoutRequest"
+        required: true
+      responses:
+        "200":
+          description: "Payout withdrawal processed successfully"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/CreatePayoutResponse"
+        "400":
+          description: "Invalid payout request or insufficient funds"
+          content:
+            "*/*":
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "Invalid withdrawal amount, UPI ID, or insufficient wallet balance"
+        "404":
+          description: "User not found"
+          content:
+            "*/*":
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "User with provided ID does not exist"
+        "500":
+          description: "Payout processing failed"
+          content:
+            "*/*":
+              schema:
+                type: "object"
+                properties:
+                  error:
+                    type: "string"
+                    example: "Payout gateway error or internal processing failure"
+
+# =============================================================================
+# DATA MODELS & SCHEMAS
+# =============================================================================
+# Business Context: Data structures for payment API request/response handling
+# Primary Stakeholders: Payment Engineering Team, API Design Team
+components:
+  schemas:
+    
+    # ---------------------------------------------------------------------------
+    # PAYMENT REQUEST DTO
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Finance Team, Customer Operations Team
+    # Use Case: Deposit request processing and validation
+    CreatePaymentRequest:
+      required:
+        - "externalUserId"
+        - "amount"
+      type: "object"
+      description: "Request DTO for creating payment deposits to user wallets"
+      properties:
+        externalUserId:
+          type: "string"
+          description: "External user ID for the deposit recipient"
+          example: "507f1f77bcf86cd799439011"
+        amount:
+          type: "number"
+          format: "double"
+          minimum: 1
+          description: "Deposit amount in currency units (minimum 1)"
+          example: 500.00
+
+    # ---------------------------------------------------------------------------
+    # PAYMENT RESPONSE DTO
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Finance Team, Integration Team
+    # Use Case: Payment confirmation and tracking
+    CreatePaymentResponse:
+      type: "object"
+      description: "Response DTO for payment deposit operations with transaction details"
+      properties:
+        paymentId:
+          type: "string"
+          description: "Unique payment transaction identifier"
+          example: "pay_MnzJBBTmzqDjFG"
+        externalUserId:
+          type: "string"
+          description: "External user ID for the deposit recipient"
+          example: "507f1f77bcf86cd799439011"
+        amount:
+          type: "number"
+          format: "double"
+          description: "Deposited amount in currency units"
+          example: 500.00
+        status:
+          type: "string"
+          description: "Payment processing status"
+          enum: ["CREATED", "PROCESSING", "COMPLETED", "FAILED"]
+          example: "COMPLETED"
+        message:
+          type: "string"
+          description: "Payment processing message or confirmation"
+          example: "Payment processed successfully"
+
+    # ---------------------------------------------------------------------------
+    # PAYOUT REQUEST DTO
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Finance Team, Risk Management Team
+    # Use Case: Withdrawal request processing and validation
+    CreatePayoutRequest:
+      required:
+        - "externalUserId"
+        - "amount"
+        - "upiId"
+      type: "object"
+      description: "Request DTO for creating payout withdrawals from user wallets"
+      properties:
+        externalUserId:
+          type: "string"
+          description: "External user ID for the withdrawal initiator"
+          example: "507f1f77bcf86cd799439011"
+        amount:
+          type: "number"
+          format: "double"
+          minimum: 1
+          description: "Withdrawal amount in currency units (minimum 1)"
+          example: 250.00
+        upiId:
+          type: "string"
+          description: "UPI ID for the withdrawal destination"
+          pattern: "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+$"
+          example: "user@paytm"
+
+    # ---------------------------------------------------------------------------
+    # PAYOUT RESPONSE DTO
+    # ---------------------------------------------------------------------------
+    # Stakeholder: Finance Team, Integration Team
+    # Use Case: Payout confirmation and tracking
+    CreatePayoutResponse:
+      type: "object"
+      description: "Response DTO for payout withdrawal operations with transaction details"
+      properties:
+        payoutId:
+          type: "string"
+          description: "Unique payout transaction identifier"
+          example: "pout_MnzJBBTmzqDjFG"
+        externalUserId:
+          type: "string"
+          description: "External user ID for the withdrawal initiator"
+          example: "507f1f77bcf86cd799439011"
+        amount:
+          type: "number"
+          format: "double"
+          description: "Withdrawn amount in currency units"
+          example: 250.00
+        upiId:
+          type: "string"
+          description: "UPI ID for the withdrawal destination"
+          example: "user@paytm"
+        status:
+          type: "string"
+          description: "Payout processing status"
+          enum: ["CREATED", "PROCESSING", "COMPLETED", "FAILED"]
+          example: "PROCESSING"
+        message:
+          type: "string"
+          description: "Payout processing message or confirmation"
+          example: "Payout initiated successfully"
+
+# =============================================================================
+# END OF API SPECIFICATION
+# =============================================================================
+# This comprehensive API specification includes:
+# ✅ Complete endpoint documentation with stakeholder information
+# ✅ Detailed request/response schemas with validation rules
+# ✅ Business context and use cases for each endpoint
+# ✅ Stakeholder mapping for accountability and ownership
+# ✅ Technical implementation details and constraints
+# ✅ Security considerations and validation requirements
+# ✅ Error handling and response codes for different scenarios
+# 
+# For questions or updates, contact: payment-support@nexus.com
+# =============================================================================
