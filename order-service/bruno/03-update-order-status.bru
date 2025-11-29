@@ -1,0 +1,27 @@
+meta {
+  name: Update Order Status
+  type: http
+  seq: 3
+}
+
+request {
+  method: PUT
+  url: {{base_url}}/api/v1/orders/ORDER_ID/status
+  headers {
+    Content-Type: application/json
+    Accept: application/json
+  }
+}
+
+body:json {
+  {
+    "status": "DELIVERED"
+  }
+}
+
+# Replace ORDER_ID with actual order ID.
+assertions {
+  expect status == 200
+  expect jsonpath "$.status" == "DELIVERED"
+}
+

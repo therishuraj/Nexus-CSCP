@@ -1,0 +1,11 @@
+meta {
+  name: Local
+  type: environment
+}
+
+vars {
+  base_url: http://localhost:3004
+  user_id: user_001
+  order_id: ORDER_ID_PLACEHOLDER
+}
+
