@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/therishuraj/Nexus-CSCP/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📖 Documentation
+    url: https://github.com/therishuraj/Nexus-CSCP#readme
+    about: Read the documentation for setup and usage instructions
+  - name: 🤝 Contributing Guide
+    url: https://github.com/therishuraj/Nexus-CSCP/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute to Nexus-CSCP
+  - name: 🔒 Security Policy
+    url: https://github.com/therishuraj/Nexus-CSCP/blob/main/.github/SECURITY.md
+    about: Report security vulnerabilities responsibly
