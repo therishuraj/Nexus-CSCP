@@ -1,0 +1,52 @@
+meta {
+  name: Wallet Deposit
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/wallet/deposit
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-User-Id: 6911c5dd9ca3972553ceaed9
+}
+
+body:json {
+  {
+    "amount": 1000.00
+  }
+}
+
+docs {
+  # Wallet Deposit API
+  
+  This endpoint allows adding money to a user's wallet via payment service integration.
+  
+  ## Headers Required:
+  - **X-User-Id**: The ID of the user whose wallet will be credited
+  
+  ## Request Body:
+  - **amount**: Amount to add to wallet (must be > 0)
+  
+  ## Expected Response:
+  Returns the response from payment service directly:
+  ```json
+  {
+    "paymentId": "691f6918f447a3b914563efd",
+    "externalUserId": "6911c5dd9ca3972553ceaed9", 
+    "amount": 1000.0,
+    "status": "SUCCESS",
+    "message": "Payment processed successfully (demo mode with Razorpay test)."
+  }
+  ```
+  
+  ## Error Cases:
+  - 400 Bad Request: Missing X-User-Id header
+  - 400 Bad Request: Invalid amount (null or <= 0)
+  - 400 Bad Request: User not found
+  - 400 Bad Request: Payment service failure
+}
