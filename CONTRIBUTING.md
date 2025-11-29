@@ -63,7 +63,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
    ./mvnw clean install
    
    # Or build all at once
-   for service in user-service product-service investment-service payment-service order-service API-Gateway producer consumer; do
+   for service in user-service product-service investment-service payment-service order-service API-Gateway notification-service; do
      cd $service && ./mvnw clean install && cd ..
    done
    ```
@@ -83,8 +83,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
    docker build -t payment-service:latest ./payment-service
    docker build -t order-service:latest ./order-service
    docker build -t api-gateway:latest ./API-Gateway
-   docker build -t consumer:latest ./consumer
-   docker build -t producer:latest ./producer
+   docker build -t notification-service:latest ./notification-service
    ```
 
 4. **Deploy to Kubernetes**:
@@ -224,8 +223,7 @@ Use the service name or component:
 - `payment-service`
 - `order-service`
 - `api-gateway`
-- `consumer`
-- `producer`
+- `notification-service`
 - `k8s`
 - `docs`
 

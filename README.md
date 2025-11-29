@@ -40,8 +40,7 @@ This foundation reduces friction for SMEs by providing a pluggable digital backb
   - order-service (port 3005)
 - Messaging (optional):
   - Kafka (single broker; KRaft or Zookeeper mode)
-  - producer (publishes events)
-  - consumer (e.g., notifications)
+  - notification-service (e.g., notifications)
 - Persistence:
   - MongoDB Atlas (configured via env vars)
 
