@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Payment Wallet - Secure Checkout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                sans-serif;
+            background: radial-gradient(circle at top, #eef2ff, #e0f2fe);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f172a;
+        }
+
+        .page {
+            padding: 24px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .wallet-card {
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            padding: 24px 24px 20px;
+        }
+
+        .wallet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .wallet-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .wallet-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .wallet-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .wallet-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .badge {
+            font-size: 11px;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            background: #ecfdf3;
+            font-weight: 600;
+        }
+
+        .wallet-body {
+            border-top: 1px dashed #e5e7eb;
+            padding-top: 18px;
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            color: #9ca3af;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .amount-row {
+            margin-bottom: 18px;
+        }
+
+        .amount {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .amount-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .amount-currency {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .amount-hint {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .info-row span:first-child {
+            color: #6b7280;
+        }
+
+        .info-strong {
+            font-weight: 600;
+        }
+
+        .divider {
+            margin: 16px 0;
+            border-top: 1px dashed #e5e7eb;
+        }
+
+        #pay-button {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 12px 18px;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #ffffff;
+            margin-top: 6px;
+            box-shadow: 0 12px 25px rgba(79, 70, 229, 0.35);
+            transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.08s ease;
+        }
+
+        #pay-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 8px 18px rgba(79, 70, 229, 0.28);
+        }
+
+        #pay-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            margin-top: 5px;
+            background: #22c55e; /* default = secure info */
+        }
+
+        .status-dot.success {
+            background: #16a34a;
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+        }
+
+        .status-text {
+            font-size: 11.5px;
+            color: #6b7280;
+        }
+
+        .status-text strong {
+            color: #16a34a;
+        }
+
+        .status-text.error {
+            color: #b91c1c;
+        }
+
+        .small-note {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .small-note span {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="wallet-card">
+        <div class="wallet-header">
+            <div class="wallet-brand">
+                <div class="wallet-avatar">PW</div>
+                <div>
+                    <div class="wallet-title">Payment Wallet</div>
+                    <div class="wallet-subtitle">Secure online payment</div>
+                </div>
+            </div>
+            <span class="badge">SECURE</span>
+        </div>
+
+        <div class="wallet-body">
+            <div class="label">Amount to add</div>
+
+            <div class="amount-row">
+                <div class="amount">
+                    <span class="amount-value" id="amountValue">0.00</span>
+                    <span class="amount-currency">INR</span>
+                </div>
+                <p class="amount-hint">
+                    Wallet balance will be updated instantly after successful payment.
+                </p>
+            </div>
+
+            <div class="info-row">
+                <span>Payment method</span>
+                <span class="info-strong">UPI / Card / NetBanking</span>
+            </div>
+
+            <div class="info-row">
+                <span>Platform fee</span>
+                <span id="platformFee">₹0.00</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <button id="pay-button">
+                <span>💳</span>
+                <span id="payButtonText">Pay securely</span>
+            </button>
+
+            <div class="status-row">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="statusText">
+                    Payments are processed securely. Your card details are never stored on this site.
+                </span>
+            </div>
+
+            <div class="small-note">
+                Using <span>Razorpay</span> as the payment gateway in the background.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const params = new URLSearchParams(window.location.search);
+
+        const paymentId = params.get("paymentId");
+        const razorpayOrderId = params.get("orderId");
+        const razorpayKey = params.get("key");
+        const amountParam = params.get("amount");
+
+        const amountInPaise = amountParam ? parseInt(amountParam, 10) : 0;
+        const amountInRupees = (amountInPaise / 100).toFixed(2);
+
+        // Populate UI
+        document.getElementById("amountValue").innerText = amountInRupees;
+        document.getElementById("payButtonText").innerText =
+            "Pay securely ₹" + amountInRupees;
+
+        // Basic validation
+        if (!paymentId || !razorpayOrderId || !razorpayKey || !amountInPaise) {
+            document.getElementById("statusText").innerText =
+                "Missing payment information in URL. Please try again.";
+            document.getElementById("statusDot").classList.add("error");
+            document.getElementById("pay-button").disabled = true;
+            return;
+        }
+
+        const options = {
+            key: razorpayKey,
+            amount: amountInPaise, // in paise
+            currency: "INR",
+            name: "Payment Wallet",
+            description: "Add money to wallet",
+            order_id: razorpayOrderId,
+            handler: function (response) {
+                // Disable button to avoid double-submission
+                const payBtn = document.getElementById("pay-button");
+                payBtn.disabled = true;
+
+                const statusText = document.getElementById("statusText");
+                const statusDot = document.getElementById("statusDot");
+
+                statusText.innerText = "Verifying payment...";
+                statusDot.classList.remove("error");
+                statusDot.classList.add("success");
+
+                // Call backend to mark payment as success and update wallets
+                fetch("/api/v1/deposit/" + paymentId + "/success", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpaySignature: response.razorpay_signature
+                    })
+                })
+                    .then(function (res) {
+                        if (!res.ok) {
+                            throw new Error("Backend verification failed");
+                        }
+                        return res.json();
+                    })
+                    .then(function () {
+                        statusText.innerHTML =
+                            "<strong>Payment successful!</strong> Money has been added to your wallet.";
+                    })
+                    .catch(function () {
+                        statusDot.classList.remove("success");
+                        statusDot.classList.add("error");
+                        statusText.classList.add("error");
+                        statusText.innerText =
+                            "Payment received, but we couldn't verify it. Please contact support.";
+                    });
+            },
+            theme: {
+                color: "#4f46e5"
+            }
+        };
+
+        const rzp = new Razorpay(options);
+
+        document.getElementById("pay-button").addEventListener("click", function (e) {
+            e.preventDefault();
+            rzp.open();
+        });
+    });
+</script>
+</body>
+</html>
