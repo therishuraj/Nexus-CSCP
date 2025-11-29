@@ -1,8 +1,24 @@
 # Nexus – Open Source Microservices Platform
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Contributors](https://img.shields.io/github/contributors/therishuraj/Nexus-CSCP)](https://github.com/therishuraj/Nexus-CSCP/graphs/contributors)
+[![Open Issues](https://img.shields.io/github/issues/therishuraj/Nexus-CSCP)](https://github.com/therishuraj/Nexus-CSCP/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Nexus is an open-source microservices platform built with Spring Boot (Java 17+), MongoDB Atlas, Kafka, and Kubernetes. It provides domain services for users, products, orders, payments, and investments, frontend by an API Gateway.
+
+## Table of Contents
+- [What the Project Does](#what-the-project-does)
+- [Architecture Overview](#architecture-overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [How to Run Locally (Kubernetes)](#how-to-run-locally-kubernetes)
+- [Run Services Without Kubernetes](#run-services-without-kubernetes-optional)
+- [Example Requests](#example-requests)
+- [Troubleshooting](#troubleshooting)
+- [Contribution Guide](#contribution-guide)
+- [Contributors](#contributors)
+- [License](#license)
 
 ## What the Project Does
 
@@ -24,7 +40,7 @@ This foundation reduces friction for SMEs by providing a pluggable digital backb
 - API Gateway as single entry point
 - Stateless Spring Boot microservices
 - MongoDB Atlas persistence
-- Optional Kafka producer/consumer
+- Kafka producer/consumer
 - Kubernetes-first deployment (Minikube)
 
 ---
@@ -59,12 +75,20 @@ Flow:
 
 ---
 
-## How to Run Locally (Kubernetes)
+## Prerequisites
 
-Prerequisites:
-- Docker
-- Minikube, kubectl
-- Java 17, Maven (for local runs)
+Before running Nexus locally, ensure you have the following installed:
+
+- **Docker Desktop** - Container runtime for building and running services
+- **Minikube** - Local Kubernetes cluster (minimum 7GB RAM allocated)
+- **kubectl** - Kubernetes command-line tool
+- **Java 17+** - Required for local service development and Maven builds
+- **Maven 3.8+** - Build automation tool
+- **MongoDB Atlas Account** - Cloud database (free tier available at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas))
+
+---
+
+## How to Run Locally (Kubernetes)
 
 1) Start Minikube (7GB RAM):
 ```bash
@@ -83,9 +107,8 @@ docker build -t nexus/payment-service:latest ./payment-service
 docker build -t nexus/order-service:latest ./order-service
 docker build -t nexus/api-gateway:latest ./API-Gateway
 
-# Optional Kafka apps
-docker build -t nexus/producer:latest ./producer
-docker build -t nexus/consumer:latest ./consumer
+# Kafka apps
+docker build -t nexus/notification:latest ./notification-service
 ```
 
 3) Deploy to Kubernetes:
@@ -148,12 +171,57 @@ Bruno collections:
 
 ---
 
-## Screenshots (add later)
+## Troubleshooting
 
-Place images under docs/screenshots/ and reference here:
-- Kubernetes Dashboard pods/services
-- K9s view of nexus namespace
-- Bruno calling API Gateway endpoints
+### Common Issues
+
+**Pods not starting or stuck in Pending state?**
+```bash
+# Check pod status and events
+kubectl describe pod <pod-name> -n nexus
+
+# Verify resource allocation
+kubectl top nodes
+```
+- Ensure Minikube has sufficient resources (minimum 7GB RAM)
+- Check MongoDB connection strings are correctly configured
+- Verify all Docker images built successfully
+
+**Cannot access API Gateway?**
+
+For **macOS users** (recommended):
+```bash
+# Use Minikube service URL
+minikube service api-gateway -n nexus --url
+```
+
+**Alternative approach** (all platforms):
+```bash
+# Port-forward to localhost
+kubectl port-forward -n nexus svc/api-gateway 8080:8080
+# Access at http://localhost:8080
+```
+
+**Kafka/Messaging issues?**
+```bash
+# Check Kafka logs
+kubectl logs -n nexus deployment/kafka
+
+# Verify Zookeeper if using legacy mode
+kubectl logs -n nexus deployment/zookeeper
+```
+- Ensure Kafka deployment matches your mode (KRaft vs Zookeeper)
+- Verify notification-service can connect to Kafka brokers
+
+**MongoDB connection failures?**
+- Double-check connection string format in ConfigMaps/Secrets
+- Ensure MongoDB Atlas IP whitelist includes `0.0.0.0/0` for testing
+- Verify network policies allow outbound connections
+
+**Need more help?**
+- Check [existing issues](https://github.com/therishuraj/Nexus-CSCP/issues)
+- Open a [new issue](https://github.com/therishuraj/Nexus-CSCP/issues/new/choose) with logs and details
+- Join [Discussions](https://github.com/therishuraj/Nexus-CSCP/discussions) for questions
 
 ---
 
@@ -176,9 +244,22 @@ Coding:
 
 ---
 
+## Contributors
+
+We are grateful to all the contributors who have helped build and improve Nexus:
+
+| Name | Email | GitHub |
+|------|-------|--------|
+| Rishu Raj | rishurajsalarpur@gmail.com | [@therishuraj](https://github.com/therishuraj) |
+| Mdataa Khan | trendsandfactss@gmail.com | [@mdataakhan](https://github.com/mdataakhan) |
+| Dheeraj Salunkhe | 2024sl93042@wilp.bits-pilani.ac.in | [@SalunkheDheeraj](https://github.com/SalunkheDheeraj) |
+| Sagar Dev | sagar.dev.lab@gmail.com | [@sagardevlab](https://github.com/sagardevlab) |
+| Tushar Trivedi | tushar.trivedi@gmail.com | [@tushar-trivedi](https://github.com/tushar-trivedi) |
+
+We welcome contributions from the community! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+---
+
 ## License
 
 Licensed under the Apache License, Version 2.0. See LICENSE for details.
-
-Badge:
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
