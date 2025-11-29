@@ -1,5 +1,6 @@
 # Java & Maven
 target/
+**/target
 *.class
 *.jar
 *.war
@@ -147,6 +148,17 @@ $RECYCLE.BIN/
 application-local.yml
 application-local.yaml
 application-local.properties
+
+# Spring Boot Application Properties (All Microservices)
+# Block sensitive configuration files at any depth
+**/src/main/resources/application.properties
+**/src/test/resources/application-test.properties
+**/src/main/resources/application-*.properties
+**/src/test/resources/application-*.properties
+
+# Allow template files to be tracked
+!**/src/main/resources/application-template.properties
+!**/src/main/resources/application-template-*.properties
 
 # Docker
 .dockerignore
