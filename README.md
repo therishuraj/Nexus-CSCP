@@ -61,7 +61,7 @@ This foundation reduces friction for SMEs by providing a pluggable digital backb
   - MongoDB Atlas (configured via env vars)
 
 Flow:
-<img width="5878" height="3244" alt="Mermaid Chart - Create complex, visual diagrams with text -2025-11-29-113759" src="https://github.com/user-attachments/assets/104be7e0-4249-4f3e-8880-990dbc21e44b" />
+![Architecture Nexus](/images/architecture.jpeg)
 
 ---
 
