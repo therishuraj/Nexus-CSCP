@@ -101,9 +101,9 @@ services:
     networks:
       - app-network
 
-  consumer:
-    build: ./consumer
-    container_name: consumer
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
     ports:
       - "3005:3005"
     depends_on:
