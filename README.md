@@ -1,4 +1,4 @@
-# Nexus – Open Source Microservices Platform
+# Nexus – Collaborative Supply Chain Platform
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Contributors](https://img.shields.io/github/contributors/therishuraj/Nexus-CSCP)](https://github.com/therishuraj/Nexus-CSCP/graphs/contributors)
